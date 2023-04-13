@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Overview</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+    }
+
+    table {
+      border-collapse: collapse;
+    }
+
+    td, th {
+      border: 1px solid black;
+      text-align: left;
+      padding-left: 5px;
+      padding-right: 5px;
+    }
+
+    thead td {
+      font-weight: bold;
+      border-bottom: 3px solid black;
+    }
+
+    tr > td:first-child {
+      font-weight: bold;
+      border-right: 3px solid black;
+      text-align: right;
+    }
+
+    td.score {
+      border-right: 1px dashed black;
+    }
+
+    td.score:not(.total-score) {
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    a {
+      display: block;
+      text-decoration: none;
+      color: black;
+    }
+
+    td.score > a {
+      padding-left: 5px;
+      padding-right: 5px;
+    }
+
+    td.relative-score {
+      border-left: 0;
+    }
+
+    tfoot td {
+      font-weight: bold;
+      border-top: 3px solid black;
+    }
+  </style>
+</head>
+<body>
+  <table>
+    <thead>
+      <tr>
+        <td></td>
+      </tr>
+    </thead>
+    <tbody></tbody>
+    <tfoot>
+      <tr>
+        <td></td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <script>
+    function getColor(score) {
+      return score >= 0.9 ? `rgba(0, 255, 0, ${score})` : `rgba(255, 0, 0, ${1 - score})`;
+    }
+
+    const scoresByPainter = {"v2": {"22": 84463, "1": 98871, "4": 25308, "30": 829259, "10": 78836, "6": 103130, "24": 48501, "9": 101217, "16": 51351, "18": 52416, "20": 85575, "14": 45199, "25": 53440, "5": 42755, "23": 93953, "12": 24770, "28": 86563, "21": 103988, "8": 21906, "29": 88258, "2": 61386, "17": 63207, "15": 59633, "7": 105251, "19": 71592, "3": 87912, "11": 74709, "26": 84499, "27": 813503, "13": 63900}, "v7": {"22": 54943, "1": 140817, "4": 25308, "30": 95765, "10": 39369, "6": 15972, "24": 28988, "9": 69345, "35": 97090, "16": 32075, "34": 185270, "31": 97956, "18": 51719, "20": 29343, "14": 45199, "32": 142046, "25": 49282, "5": 42075, "23": 89118, "12": 24770, "28": 78444, "33": 91830, "21": 76026, "8": 21906, "29": 92128, "2": 66638, "17": 48023, "15": 49944, "7": 50683, "19": 57543, "3": 65067, "11": 71200, "26": 72406, "27": 174950, "13": 28187}, "v1": {"22": 84463, "1": 155735, "4": 46057, "30": 829259, "10": 78836, "6": 103130, "24": 48501, "9": 113844, "35": 347413, "16": 52218, "34": 356580, "31": 340731, "18": 59074, "20": 85575, "14": 68244, "32": 363822, "25": 53440, "5": 74079, "23": 112144, "12": 40685, "28": 86563, "33": 357056, "21": 112248, "8": 36589, "29": 88258, "2": 90105, "17": 63207, "15": 72015, "7": 119052, "19": 78513, "3": 92077, "11": 74709, "26": 84499, "27": 813503, "13": 63900}, "v6": {"22": 54943, "1": 170668, "4": 25308, "30": 95765, "10": 72254, "6": 95781, "24": 47067, "9": 157007, "16": 62411, "18": 97639, "20": 76145, "14": 45199, "25": 76654, "5": 42755, "23": 93953, "12": 24770, "28": 78444, "21": 122671, "8": 21906, "29": 92128, "2": 66638, "17": 88858, "15": 62157, "7": 95990, "19": 76647, "3": 65067, "11": 108280, "26": 72406, "27": 174950, "13": 83306}, "v5": {"22": 54943, "1": 125071, "4": 25313, "30": 95765, "10": 42379, "6": 20151, "24": 28219, "9": 86910, "16": 31816, "18": 44586, "20": 27772, "14": 45204, "25": 42818, "5": 42760, "23": 93958, "12": 24775, "28": 99198, "21": 46960, "8": 21911, "29": 117129, "2": 66643, "17": 47089, "15": 36817, "7": 95990, "19": 42963, "3": 50466, "11": 59736, "26": 168752, "27": 174950, "13": 28867}, "v4": {"22": 42556, "1": 65258, "4": 25308, "30": 829259, "10": 49198, "6": 24579, "24": 34304, "9": 96052, "16": 35371, "18": 50074, "20": 31247, "14": 45199, "25": 47520, "5": 32010, "23": 53600, "12": 21436, "28": 86563, "21": 72583, "8": 21906, "29": 88258, "2": 37330, "17": 53218, "15": 42659, "7": 51352, "19": 54651, "3": 57683, "11": 59049, "26": 84499, "27": 813503, "13": 32251}, "v3": {"22": 45105, "1": 65258, "4": 25308, "30": 829259, "10": 49198, "6": 27533, "24": 34304, "9": 108851, "16": 37938, "18": 50117, "20": 34806, "14": 45199, "25": 51332, "5": 33609, "23": 54854, "12": 23356, "28": 86563, "21": 73713, "8": 21906, "29": 88258, "2": 37330, "17": 53503, "15": 42973, "7": 54798, "19": 57086, "3": 59105, "11": 63568, "26": 84499, "27": 813503, "13": 32420}};
+    const scoresByImage = {};
+
+    const sortedPainters = Object.keys(scoresByPainter).sort().reverse();
+    const sortedImages = [...new Set(Object.values(scoresByPainter).map(painterScores => Object.keys(painterScores)).flat())].sort((a, b) => a < b);
+
+    const headerRow = document.querySelector('thead > tr');
+    for (const painter of sortedPainters) {
+      const painterCell = document.createElement('td');
+      painterCell.textContent = painter;
+      painterCell.colSpan = 2;
+      headerRow.appendChild(painterCell);
+
+      for (const image of sortedImages) {
+        if (scoresByImage[image] === undefined) {
+          scoresByImage[image] = [];
+        }
+
+        scoresByImage[image].push(scoresByPainter[painter][image] || 0);
+      }
+    }
+
+    const totalScores = [];
+    const relativeScores = [];
+
+    for (let i = 0; i < sortedPainters.length; i++) {
+      totalScores.push(0);
+      relativeScores.push(0);
+    }
+
+    const tableBody = document.querySelector('tbody');
+
+    for (const image of sortedImages) {
+      const row = document.createElement('tr');
+
+      const imageCell = document.createElement('td');
+
+      const imageLinkElement = document.createElement('a');
+      imageLinkElement.textContent = image;
+      imageLinkElement.href = `input/${image}.png`;
+      imageLinkElement.target = '_blank';
+
+      imageCell.appendChild(imageLinkElement);
+      row.appendChild(imageCell);
+
+      const bestScore = Math.min(...scoresByImage[image].filter(score => score > 0));
+      for (let i = 0; i < scoresByImage[image].length; i++) {
+        const score = scoresByImage[image][i];
+        const relativeScore = score > 0 ? bestScore / score : 0;
+
+        totalScores[i] += score;
+        relativeScores[i] += relativeScore;
+
+        const scoreCell = document.createElement('td');
+        scoreCell.style.background = getColor(relativeScore);
+        scoreCell.classList.add('score');
+
+        const linkElement = document.createElement('a');
+        linkElement.textContent = score.toLocaleString();
+        linkElement.href = `output/${sortedPainters[i]}/${image}.png`;
+        linkElement.target = '_blank';
+
+        const relativeScoreCell = document.createElement('td');
+        relativeScoreCell.textContent = relativeScore.toFixed(3);
+        relativeScoreCell.style.background = getColor(relativeScore);
+        relativeScoreCell.classList.add('relative-score');
+
+        scoreCell.appendChild(linkElement);
+        row.appendChild(scoreCell);
+        row.appendChild(relativeScoreCell);
+      }
+
+      tableBody.appendChild(row);
+    }
+
+    const imageCount = Object.keys(scoresByImage).length;
+
+    const totalRow = document.querySelector('tfoot > tr');
+    for (let i = 0; i < sortedPainters.length; i++) {
+      const totalScore = totalScores[i];
+      const relativeScore = relativeScores[i];
+
+      const totalScoreCell = document.createElement('td');
+      totalScoreCell.textContent = totalScore.toLocaleString();
+      totalScoreCell.style.background = getColor(relativeScore / imageCount);
+      totalScoreCell.classList.add('score', 'total-score');
+
+      const relativeScoreCell = document.createElement('td');
+      relativeScoreCell.textContent = relativeScore.toFixed(3);
+      relativeScoreCell.style.background = getColor(relativeScore / imageCount);
+      relativeScoreCell.classList.add('relative-score');
+
+      totalRow.appendChild(totalScoreCell);
+      totalRow.appendChild(relativeScoreCell);
+    }
+  </script>
+</body>
+</html>

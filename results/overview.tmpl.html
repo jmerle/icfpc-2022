@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Overview</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+    }
+
+    table {
+      border-collapse: collapse;
+    }
+
+    td, th {
+      border: 1px solid black;
+      text-align: left;
+      padding-left: 5px;
+      padding-right: 5px;
+    }
+
+    thead td {
+      font-weight: bold;
+      border-bottom: 3px solid black;
+    }
+
+    tr > td:first-child {
+      font-weight: bold;
+      border-right: 3px solid black;
+      text-align: right;
+    }
+
+    td.score {
+      border-right: 1px dashed black;
+    }
+
+    td.score:not(.total-score) {
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    a {
+      display: block;
+      text-decoration: none;
+      color: black;
+    }
+
+    td.score > a {
+      padding-left: 5px;
+      padding-right: 5px;
+    }
+
+    td.relative-score {
+      border-left: 0;
+    }
+
+    tfoot td {
+      font-weight: bold;
+      border-top: 3px solid black;
+    }
+  </style>
+</head>
+<body>
+  <table>
+    <thead>
+      <tr>
+        <td></td>
+      </tr>
+    </thead>
+    <tbody></tbody>
+    <tfoot>
+      <tr>
+        <td></td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <script>
+    function getColor(score) {
+      return score >= 0.9 ? `rgba(0, 255, 0, ${score})` : `rgba(255, 0, 0, ${1 - score})`;
+    }
+
+    const scoresByPainter = /* scores_by_painter */{};
+    const scoresByImage = {};
+
+    const sortedPainters = Object.keys(scoresByPainter).sort().reverse();
+    const sortedImages = [...new Set(Object.values(scoresByPainter).map(painterScores => Object.keys(painterScores)).flat())].sort((a, b) => a < b);
+
+    const headerRow = document.querySelector('thead > tr');
+    for (const painter of sortedPainters) {
+      const painterCell = document.createElement('td');
+      painterCell.textContent = painter;
+      painterCell.colSpan = 2;
+      headerRow.appendChild(painterCell);
+
+      for (const image of sortedImages) {
+        if (scoresByImage[image] === undefined) {
+          scoresByImage[image] = [];
+        }
+
+        scoresByImage[image].push(scoresByPainter[painter][image] || 0);
+      }
+    }
+
+    const totalScores = [];
+    const relativeScores = [];
+
+    for (let i = 0; i < sortedPainters.length; i++) {
+      totalScores.push(0);
+      relativeScores.push(0);
+    }
+
+    const tableBody = document.querySelector('tbody');
+
+    for (const image of sortedImages) {
+      const row = document.createElement('tr');
+
+      const imageCell = document.createElement('td');
+
+      const imageLinkElement = document.createElement('a');
+      imageLinkElement.textContent = image;
+      imageLinkElement.href = `input/${image}.png`;
+      imageLinkElement.target = '_blank';
+
+      imageCell.appendChild(imageLinkElement);
+      row.appendChild(imageCell);
+
+      const bestScore = Math.min(...scoresByImage[image].filter(score => score > 0));
+      for (let i = 0; i < scoresByImage[image].length; i++) {
+        const score = scoresByImage[image][i];
+        const relativeScore = score > 0 ? bestScore / score : 0;
+
+        totalScores[i] += score;
+        relativeScores[i] += relativeScore;
+
+        const scoreCell = document.createElement('td');
+        scoreCell.style.background = getColor(relativeScore);
+        scoreCell.classList.add('score');
+
+        const linkElement = document.createElement('a');
+        linkElement.textContent = score.toLocaleString();
+        linkElement.href = `output/${sortedPainters[i]}/${image}.png`;
+        linkElement.target = '_blank';
+
+        const relativeScoreCell = document.createElement('td');
+        relativeScoreCell.textContent = relativeScore.toFixed(3);
+        relativeScoreCell.style.background = getColor(relativeScore);
+        relativeScoreCell.classList.add('relative-score');
+
+        scoreCell.appendChild(linkElement);
+        row.appendChild(scoreCell);
+        row.appendChild(relativeScoreCell);
+      }
+
+      tableBody.appendChild(row);
+    }
+
+    const imageCount = Object.keys(scoresByImage).length;
+
+    const totalRow = document.querySelector('tfoot > tr');
+    for (let i = 0; i < sortedPainters.length; i++) {
+      const totalScore = totalScores[i];
+      const relativeScore = relativeScores[i];
+
+      const totalScoreCell = document.createElement('td');
+      totalScoreCell.textContent = totalScore.toLocaleString();
+      totalScoreCell.style.background = getColor(relativeScore / imageCount);
+      totalScoreCell.classList.add('score', 'total-score');
+
+      const relativeScoreCell = document.createElement('td');
+      relativeScoreCell.textContent = relativeScore.toFixed(3);
+      relativeScoreCell.style.background = getColor(relativeScore / imageCount);
+      relativeScoreCell.classList.add('relative-score');
+
+      totalRow.appendChild(totalScoreCell);
+      totalRow.appendChild(relativeScoreCell);
+    }
+  </script>
+</body>
+</html>
